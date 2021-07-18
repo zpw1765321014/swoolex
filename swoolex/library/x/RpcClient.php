@@ -1,13 +1,15 @@
 <?php
-// +----------------------------------------------------------------------
-// | 微服务-客户端调用类
-// +----------------------------------------------------------------------
-// | Copyright (c) 2018 https://blog.junphp.com All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 小黄牛 <1731223728@qq.com>
-// +----------------------------------------------------------------------
+/**
+ * +----------------------------------------------------------------------
+ * 微服务-客户端调用类
+ * +----------------------------------------------------------------------
+ * 官网：https://www.sw-x.cn
+ * +----------------------------------------------------------------------
+ * 作者：小黄牛 <1731223728@qq.com>
+ * +----------------------------------------------------------------------
+ * 开源协议：http://www.apache.org/licenses/LICENSE-2.0
+ * +----------------------------------------------------------------------
+*/
 
 namespace x;
 
@@ -302,8 +304,10 @@ class RpcClient
         $this->send_num++;
 
         // 更新当前请求数
-        $config['request_num'] = isset($config['request_num']) ? ($config['request_num']+1) : 1;
-        Rpc::run()->set($config);
+        $md5 = md5($config['class'].$config['function'].$config['ip'].$config['port']);
+        $num_key = \x\Config::get('rpc.redis_key').'_num_'.$md5;
+        $redis = new \x\Redis();
+        $redis->INCR($num_key); 
 
         $data = json_encode([
             'class' => $this->class,
@@ -334,10 +338,10 @@ class RpcClient
             'read_timeout'          => $rpc['read_timeout'],
         ));
         if (!$client->connect($config['ip'], $config['port'], 1)) {
+            $redis->DECR($num_key); 
+            $redis->return();
             // 这里理应关闭该连接，标记is_fault
-            $config['is_fault'] = 1;
-            $config['request_num'] -= 1;
-            \x\Rpc::run()->set($config);
+            \x\Rpc::run()->set(['is_fault' => 1]);
             \x\Rpc::run()->ping_error($config, 4);
             $this->msg = 'connect failed. Error: '.$client->errCode;
             $client->close();
@@ -348,18 +352,18 @@ class RpcClient
         $client->close();
 
         if (!$body) {
+            $redis->DECR($num_key); 
+            $redis->return();
             // 这里理应关闭该连接，标记is_fault
-            $config['is_fault'] = 1;
-            $config['request_num'] -= 1;
-            \x\Rpc::run()->set($config);
+            \x\Rpc::run()->set(['is_fault' => 1]);
             \x\Rpc::run()->ping_error($config, 5);
             $this->msg = 'connect return body Error';
             return false;
         }
 
         // 请求数-1
-        $config['request_num'] -= 1;
-        \x\Rpc::run()->set($config);
+        $redis->DECR($num_key); 
+        $redis->return();
 
         // 数据解密
         if ($rpc['aes_status'] == true) {
@@ -375,8 +379,6 @@ class RpcClient
         if ($this->status == '200') {
             if ($this->task) {
                 $this->msg = 'Task Success';
-            } else {
-                $this->msg = 'Success';
             }
             return $this->data;
         }
@@ -388,13 +390,11 @@ class RpcClient
     private function weightConfig($list) {
         // 检测是不是刚初始化SW-X的时候
         if (empty($list[0]['ping_ms']) && empty($list[0]['is_fault'])) {
-            $list[0]['redis_index'] = 0;
             return $list[0];
         }
         // 先删除已经不行的代码
         $yes_list = [];
         foreach ($list as $k=>$v) {
-            $v['redis_index'] = $k;
             if (isset($v['is_fault']) && $v['is_fault'] == 0) {
                 $yes_list[] = $v;
             } else if (empty($v['is_fault']) && empty($v['status'])) {

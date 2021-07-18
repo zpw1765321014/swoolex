@@ -1,15 +1,19 @@
 <?php
-// +----------------------------------------------------------------------
-// | 启动服务
-// +----------------------------------------------------------------------
-// | Copyright (c) 2018 https://blog.junphp.com All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 小黄牛 <1731223728@qq.com>
-// +----------------------------------------------------------------------
+/**
+ * +----------------------------------------------------------------------
+ * 启动服务
+ * +----------------------------------------------------------------------
+ * 官网：https://www.sw-x.cn
+ * +----------------------------------------------------------------------
+ * 作者：小黄牛 <1731223728@qq.com>
+ * +----------------------------------------------------------------------
+ * 开源协议：http://www.apache.org/licenses/LICENSE-2.0
+ * +----------------------------------------------------------------------
+*/
 
 namespace x\service;
+
+use Swoole\Table;
 
 class Server
 {    
@@ -82,6 +86,10 @@ class Server
             $set['ssl_key_file'] = $config['ssl_key_file'];
             $wss = SWOOLE_SOCK_TCP | SWOOLE_SSL;
         }
+        // 启动MQTT协议
+        if ($server == 'mqtt') {
+            $set['open_mqtt_protocol'] = true;
+        }
         switch ($server) {
             case 'http':
                 $this->service = new \Swoole\Http\Server($config['host'], $config['port'], SWOOLE_PROCESS, $wss);
@@ -91,17 +99,50 @@ class Server
             break;
             case 'server':
             case 'rpc':
+            case 'mqtt':
                 $this->service = new \Swoole\Server($config['host'], $config['port'], SWOOLE_PROCESS, $wss);
             break;
         }
         // 启动类型写入配置项
         \x\Config::set('server.sw_service_type', $server);
-
+        
         $this->config = $config;
         // 注入配置
         $this->service->set($set);
+        // 进入内存表创建
+        if ($server == 'mqtt') {
+            $this->create_mqtt_table();
+        }
         // 进行事件绑定
         $this->event_binding();
+    }
+
+    /**
+     * MQTT服务创建内存表
+     * @todo 无
+     * @author 小黄牛
+     * @version v2.0.11 + 2021.07.03
+     * @deprecated 暂不启用
+     * @global 无
+     * @return void
+    */
+    private function create_mqtt_table() {
+        // 创建设备表
+        $device_list = new Table(\x\Config::get('mqtt.device_max_num'));
+        $device_list->column('fd', Table::TYPE_INT, 12); // FD
+        $device_list->column('client_id', Table::TYPE_STRING, 64); // 客户端
+        $device_list->column('status', Table::TYPE_INT, 1); // 离线状态
+        $device_list->column('ping_time', Table::TYPE_INT, 12); // 心跳更新时间
+        $device_list->create();
+        // 将表附加到SW实例里，方便后续使用
+        $this->service->device_list = $device_list;
+
+        // 创建FD表，用于更新设备在线状态
+        $device_fd = new Table(\x\Config::get('mqtt.device_max_num'));
+        $device_fd->column('client_id', Table::TYPE_STRING, 64); // 客户端
+        $device_fd->create();
+        // 将表附加到SW实例里，方便后续使用
+        $this->service->device_fd = $device_fd;
     }
 
     /**

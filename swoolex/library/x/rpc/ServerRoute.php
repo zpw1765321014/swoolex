@@ -1,13 +1,15 @@
 <?php
-// +----------------------------------------------------------------------
-// | 微服务-服务端路由转发
-// +----------------------------------------------------------------------
-// | Copyright (c) 2018 https://blog.junphp.com All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed (http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 小黄牛 <1731223728@qq.com>
-// +----------------------------------------------------------------------
+/**
+ * +----------------------------------------------------------------------
+ * 微服务-服务端路由转发
+ * +----------------------------------------------------------------------
+ * 官网：https://www.sw-x.cn
+ * +----------------------------------------------------------------------
+ * 作者：小黄牛 <1731223728@qq.com>
+ * +----------------------------------------------------------------------
+ * 开源协议：http://www.apache.org/licenses/LICENSE-2.0
+ * +----------------------------------------------------------------------
+*/
 
 namespace x\rpc;
 
@@ -46,20 +48,26 @@ class ServerRoute
         $obj = $ref->newInstance();
         $obj->headers = $data['headers'] ?? [];
         $obj->param = $data['param'] ?? [];
-        // 调用服务
-        $return = $function->invokeArgs($obj, []);
-        $return = $return ? $return : [];
-
-        // 记录主动错误日志
-        if (isset($obj->rpc_error) && $obj->rpc_error == true) {
-            // 主动抛出错误日志内容
-            if (isset($obj->rpc_msg)) {
-                $return = $obj->rpc_msg;
+        
+        try {
+            // 调用服务
+            $return = $function->invokeArgs($obj, []);
+            $return = $return ? $return : [];
+            // 记录主动错误日志
+            if (isset($obj->rpc_error) && $obj->rpc_error == true) {
+                // 主动抛出错误日志内容
+                if (isset($obj->rpc_msg)) {
+                    $return = $obj->rpc_msg;
+                }
+                $this->create_rpc_error_log($data, $return);
             }
-            $this->create_rpc_error_log($data, $return);
+        } catch (\Throwable $throwable) {
+            $msg = $throwable->getMessage().' Line：'.$throwable->getFile().'->'.$throwable->getLine();
+            $return = false;
+            $this->create_rpc_error_log($data, $msg);
         }
 
-        return $ServerCurrency->returnJson($server, $fd, '200', 'SUCCESS', $return);
+        return $ServerCurrency->returnJson($server, $fd, '200', ((isset($obj->msg)) ? $obj->msg : 'SUCCESS'), $return);
     }
 
     /**

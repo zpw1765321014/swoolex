@@ -1,49 +1,44 @@
 <?php
-// +----------------------------------------------------------------------
-// | 分页样式接口类
-// +----------------------------------------------------------------------
-// | Copyright (c) 2018 https://blog.junphp.com All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed (http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 小黄牛 <1731223728@qq.com>
-// +----------------------------------------------------------------------
+/**
+ * +----------------------------------------------------------------------
+ * 分页样式接口类
+ * +----------------------------------------------------------------------
+ * 官网：https://www.sw-x.cn
+ * +----------------------------------------------------------------------
+ * 作者：小黄牛 <1731223728@qq.com>
+ * +----------------------------------------------------------------------
+ * 开源协议：http://www.apache.org/licenses/LICENSE-2.0
+ * +----------------------------------------------------------------------
+*/
 
 namespace x;
 
-abstract class Page
-{
+abstract class Page {
 
     /**
      * 数据集
      */
     protected $items = [];
-
     /**
      * 当前页
      */
     protected $currentPage;
-
     /**
      * 最后一页
      */
     protected $lastPage;
-
     /**
      * 数据总数
      */
     protected $total;
-
     /**
      * 每页数量
      */
     protected $listRows;
-
     /**
      * 是否有下一页
      */
     protected $hasMore;
-
     /**
      * 分页配置
      */
@@ -67,8 +62,7 @@ abstract class Page
      * @param array $options 分页配置
      * @return void
     */
-    public function __construct($items, $listRows, $currentPage = null, $total = null, $options = [])
-    {
+    public function __construct($items, $listRows, $currentPage = null, $total = null, $options = []) {
         $this->options = array_merge($this->options, $options);
 
         $this->total       = $total;
@@ -89,8 +83,7 @@ abstract class Page
      * @param int $currentPage 当前页
      * @return void
     */
-    protected function setCurrentPage($currentPage)
-    {
+    protected function setCurrentPage($currentPage) {
         if ($currentPage > $this->lastPage) {
             return $this->lastPage > 0 ? $this->lastPage : 1;
         }
@@ -108,8 +101,7 @@ abstract class Page
      * @param int $page 分页数
      * @return string
     */
-    protected function url($page)
-    {
+    protected function url($page) {
         if ($page <= 0) {
             $page = 1;
         }
@@ -137,8 +129,7 @@ abstract class Page
      * @global 无
      * @return string|null
     */
-    protected function buildFragment()
-    {
+    protected function buildFragment() {
         return $this->options['fragment'] ? '#' . $this->options['fragment'] : '';
     }
 
@@ -153,8 +144,7 @@ abstract class Page
      * @param int $end 结束
      * @return void
     */
-    public function getUrlRange($start, $end)
-    {
+    public function getUrlRange($start, $end) {
         $urls = [];
 
         for ($page = $start; $page <= $end; $page++) {
@@ -173,8 +163,7 @@ abstract class Page
      * @global 无
      * @return void
     */
-    public function hasPages()
-    {
+    public function hasPages() {
         return !(1 == $this->currentPage && !$this->hasMore);
     }
 
@@ -187,8 +176,7 @@ abstract class Page
      * @global 无
      * @return void
     */
-    public function total()
-    {
+    public function total() {
         return $this->total;
     }
     /**
@@ -200,8 +188,7 @@ abstract class Page
      * @global 无
      * @return void
     */
-    public function listRows()
-    {
+    public function listRows() {
         return $this->listRows;
     }
     /**
@@ -213,8 +200,7 @@ abstract class Page
      * @global 无
      * @return void
     */
-    public function currentPage()
-    {
+    public function currentPage() {
         return $this->currentPage;
     }
     /**
@@ -226,8 +212,7 @@ abstract class Page
      * @global 无
      * @return void
     */
-    public function lastPage()
-    {
+    public function lastPage() {
         return $this->lastPage;
     }
 
