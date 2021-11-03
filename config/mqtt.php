@@ -15,12 +15,14 @@ return [
     // +-----------------------------
     // | 服务端
     // +-----------------------------
+    // 是否启用密码器，启用时配置文件中得账号密码无效，改为下方密码器输出
+    'auth_status' => false,
+    // 密码器地址
+    'cipher' => '\box\config\MqttCipher',
     // 账号
     'user_name' => 'swoolex',
     // 密码
     'password' => 'swoolex',
-    // 版本
-    'protocol_level' => 3, // 支持传入3 | 5
     // 设备最大同时在线数
     'device_max_num' => 100000,
     // 判断设备心跳过期时间(S)

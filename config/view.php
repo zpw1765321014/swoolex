@@ -11,14 +11,13 @@
  * +----------------------------------------------------------------------
 */
 
-
 return [
     // 模板引擎类型 仅支持 SwooleX 支持扩展
     'type'         => 'SwooleX',
     // 默认模板渲染规则 1 解析为小写+下划线 2 全部转换小写 3 保持操作方法
     'auto_rule'    => 1,
     // 模板路径
-    'view_path'    => ROOT_PATH . '/app/view',
+    'view_path'    => APP_PATH.'view',
     // 模板后缀
     'view_suffix'  => 'html',
     // 模板文件名分隔符
@@ -52,4 +51,8 @@ return [
     'http_response_headers' => [
         'Content-type' => 'text/html; charset=utf-8'
     ],
+    // 模板替换 - 可看做模板常量
+    'tpl_replace_string'  =>  [
+        '__PUBLIC__' => 'http://IP:端口/静态文件地址',
+    ]
 ];

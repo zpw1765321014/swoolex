@@ -15,7 +15,7 @@ return [
     // host
     'host' => '0.0.0.0',
     // 端口
-    'port' => 9501,
+    'port' => 9502,
     // HTTPS证书
     'ssl_cert_file' => '',
     // HTTPS证书
@@ -25,13 +25,13 @@ return [
     // 启动的 Reactor 线程数
     'reactor_num' => false,
     // 启动的 Worker 进程数
-    'worker_num' => 1,
+    'worker_num' => swoole_cpu_num()*2,
     // 设置 worker 进程的最大任务数
     'max_request' => 0,
     // 最大允许的连接数
     'max_connection' => false,
     // 配置 Task 进程的数量，不配置则不启动
-    'task_worker_num' => 1,
+    'task_worker_num' => swoole_cpu_num(),
     // 设置 Task 进程与 Worker 进程之间通信的方式
     'task_ipc_mode' => 1,
     // task 进程的最大任务数，如果不希望进程自动退出可以设置为 0
@@ -68,7 +68,7 @@ return [
     'package_max_length' => 1024*1024*2,
     // 启用 MQTT 协议
     'open_mqtt_protocol' => false,
-    // 静态文件根目录 前缀使用ROOT_PATH常量衔接，末尾不带/符号
+    // 静态文件根目录 前缀使用ROOT_PATH常量衔接，开始结尾都不需要带/符号
     'document_root' => '',
     // 是否启用异步风格服务器的协程支持
     'enable_coroutine' => true,
@@ -87,13 +87,13 @@ return [
     // +-----------------------------
 
     // 记录master和manager的进程id
-    'pid_file' => ROOT_PATH.'/other/env/sw-x.pid', 
+    'pid_file' => BOX_PATH.'env'.DS.'sw-x.pid', 
     // 记录worker的进程id
-    'worker_pid_file' => ROOT_PATH.'/other/env/worker.pid', 
+    'worker_pid_file' => BOX_PATH.'env'.DS.'worker.pid', 
     // 记录tasker的进程id
-    'tasker_pid_file' => ROOT_PATH.'/other/env/tasker.pid', 
+    'tasker_pid_file' => BOX_PATH.'env'.DS.'tasker.pid', 
     // 记录路由的文件
-    'route_file' => ROOT_PATH.'/other/env/route_file.env', 
+    'route_file' => BOX_PATH.'env'.DS.'route_file.env', 
 
     // +-----------------------------
     // | WebSocket 服务的独立配置
@@ -136,5 +136,5 @@ return [
     // 控制台密码
     'http_monitor_password' => 'swoolex',
     // 监控文件存放根地址-需要/结尾
-    'http_monitor_dir_root' => ROOT_PATH.'/runtime/http_monitor/',
+    'http_monitor_dir_root' => WORKLOG_PATH.'http_monitor'.DS,
 ];
